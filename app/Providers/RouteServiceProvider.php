@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
@@ -17,7 +16,9 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    public const HOME = '/dashboard';
+    public const HOME = '/chatbot-dashboard';  // Default route for farmer
+
+    public const ADMIN_HOME = '/dashboard';  // Admin dashboard path
 
     /**
      * Define your route model bindings, pattern filters, and other route configuration.

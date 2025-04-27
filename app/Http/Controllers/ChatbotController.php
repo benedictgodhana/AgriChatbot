@@ -2,9 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Chat;
+use App\Models\MenuItem;
+use App\Models\Message;
+use App\Models\Setting;
+use App\Models\WelcomeMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;  // Import the Str facade to generate UUID
+
 
 class ChatbotController extends Controller
 {
@@ -361,10 +368,195 @@ class ChatbotController extends Controller
 
         return true;
     }
-
-    public function show()
+    public function show($token)
     {
-        return view('chatbot');  // Ensure you have a view named 'chatbot.blade.php'
+        // Common data
+        $welcomeMessage = WelcomeMessage::getRandomActive();
+        $settings = Setting::getAllSettings('chatbot');
+        $user = auth()->user();
+        $chats = Chat::with('messages')->where('user_id', $user->id)->get();
+        $toolsMenuItems = MenuItem::all();
+        $infoMenuItems = MenuItem::all();
+        $settingsMenuItems = Setting::all();
+        $userSubscription = $user->activeSubscription();
+        $profileMenuItems = MenuItem::all();
+    
+        // Fetch the messages for the current chat
+        $currentChat = Chat::where('user_id', $user->id)
+                            ->where('token', $token)
+                            ->firstOrFail();
+    
+        // Fetch the messages related to the chat
+        $messages = Message::where('chat_id', $currentChat->id)
+                           ->get();
+    
+        $footerLinks = collect([
+            (object) ['url' => '/privacy', 'title' => 'Privacy Policy'],
+            (object) ['url' => '/terms', 'title' => 'Terms of Service'],
+            (object) ['url' => '/about', 'title' => 'About Us'],
+            (object) ['url' => '/contact', 'title' => 'Contact Us'],
+        ]);
+    
+        $sidebarLinks = [
+            ['title' => 'Dashboard', 'url' => route('dashboard')],
+            ['title' => 'Settings', 'url' => route('settings.index')],
+            ['title' => 'Chats', 'url' => route('chats')],
+        ];
+    
+        return view('chatbot', compact(
+            'welcomeMessage',
+            'settings',
+            'chats',
+            'sidebarLinks',
+            'toolsMenuItems',
+            'infoMenuItems',
+            'settingsMenuItems',
+            'user',
+            'userSubscription',
+            'profileMenuItems',
+            'messages', // Pass the messages to the view
+            'footerLinks',
+            'currentChat'
+        ));
     }
+    
 
+public function index()
+{
+    // Common Data
+    $welcomeMessage = WelcomeMessage::getRandomActive();
+    $settings = Setting::getAllSettings('chatbot');
+    $user = auth()->user();
+    $chats = Chat::where('user_id', $user->id)->get(); // Chats without the token for now
+    $toolsMenuItems = MenuItem::all();
+    $infoMenuItems = MenuItem::all();
+    $settingsMenuItems = Setting::all();
+    $userSubscription = $user->activeSubscription();
+    $profileMenuItems = MenuItem::all();
+    $messages = Message::whereIn('chat_id', Chat::where('user_id', auth()->user()->id)->whereNotNull('token')->pluck('id'))->get();
+    
+    $footerLinks = collect([
+        (object) ['url' => '/privacy', 'title' => 'Privacy Policy'],
+        (object) ['url' => '/terms', 'title' => 'Terms of Service'],
+        (object) ['url' => '/about', 'title' => 'About Us'],
+        (object) ['url' => '/contact', 'title' => 'Contact Us'],
+    ]);
+
+    $sidebarLinks = [
+        ['title' => 'Dashboard', 'url' => route('dashboard')],
+        ['title' => 'Settings', 'url' => route('settings.index')],
+    ];
+
+    // Pick the first chat if available
+    $currentChat = $chats->first();
+
+    return view('chatbot', compact(
+        'welcomeMessage',
+        'settings',
+        'chats',
+        'sidebarLinks',
+        'toolsMenuItems',
+        'infoMenuItems',
+        'settingsMenuItems',
+        'user',
+        'userSubscription',
+        'profileMenuItems',
+        'messages',
+        'footerLinks',
+        'currentChat'
+    ));
+}
+
+
+
+
+    public function showInteraction($chatId)
+    {
+        // Fetch chat details, assuming you have a Chat model
+        $chat = Chat::find($chatId);
+
+        if (!$chat) {
+            return redirect()->route('chatbot-dashboard')->with('error', 'Chat not found.');
+        }
+
+        // Return a view with the chat details
+        return view('chatbot.interaction', compact('chat'));
+    }   
+
+    public function create()
+    {
+        // Common Data
+        $welcomeMessage = WelcomeMessage::getRandomActive();
+        $settings = Setting::getAllSettings('chatbot');
+        $user = auth()->user();
+        
+        // Get existing chats for the user
+        $chats = Chat::where('user_id', $user->id)->get();
+        
+        // Get current chat from session, if available
+        $currentChat = session('currentChat') ?? ($chats->isEmpty() ? Chat::create([
+            'user_id' => $user->id,
+            'title' => 'New Chat',
+            'description' => 'A new chat has been created.',
+            'is_pinned' => 0,
+            'token' => Str::uuid(),
+        ]) : $chats->first());
+        
+        // Other data (menu items, subscription, etc.)
+        $toolsMenuItems = MenuItem::all();
+        $infoMenuItems = MenuItem::all();
+        $settingsMenuItems = Setting::all();
+        $userSubscription = $user->activeSubscription();
+        $profileMenuItems = MenuItem::all();
+        $messages = []; // No messages yet, so we pass an empty array
+    
+        $footerLinks = collect([
+            (object) ['url' => '/privacy', 'title' => 'Privacy Policy'],
+            (object) ['url' => '/terms', 'title' => 'Terms of Service'],
+            (object) ['url' => '/about', 'title' => 'About Us'],
+            (object) ['url' => '/contact', 'title' => 'Contact Us'],
+        ]);
+        
+        $sidebarLinks = [
+            ['title' => 'Dashboard', 'url' => route('dashboard')],
+            ['title' => 'Settings', 'url' => route('settings.index')],
+        ];
+        
+        return view('chatbot', compact(
+            'welcomeMessage',
+            'settings',
+            'chats', // Pass the existing chats to the view
+            'sidebarLinks',
+            'toolsMenuItems',
+            'infoMenuItems',
+            'settingsMenuItems',
+            'user',
+            'userSubscription',
+            'profileMenuItems',
+            'messages',
+            'footerLinks',
+            'currentChat' // Include the current chat here
+        ));
+    }
+    
+    
+    public function createNewChat()
+    {
+        $user = auth()->user();
+    
+        // Create a new chat
+        $chat = Chat::create([
+            'user_id' => $user->id,
+            'title' => 'New Chat',
+            'description' => 'A new chat has been created.',
+            'is_pinned' => 0,
+            'token' => Str::uuid(),
+        ]);
+    
+        // Redirect to the chat show page directly
+        return redirect()->route('chat.show', $chat->token);
+    }
+    
+    
+    
 }

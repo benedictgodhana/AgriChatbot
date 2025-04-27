@@ -25,12 +25,23 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // Authenticate the user
         $request->authenticate();
-
+    
+        // Regenerate the session to prevent session fixation attacks
         $request->session()->regenerate();
-
+    
+        // Check if the user has permission to view the admin dashboard
+        if ($request->user()->can('view dashboard')) {
+            // If the user has permission, redirect to the admin dashboard
+            return redirect()->intended(RouteServiceProvider::ADMIN_HOME);
+        }
+    
+        // If the user does not have permission to view the admin dashboard,
+        // redirect to the default home page (e.g., chatbot-dashboard)
         return redirect()->intended(RouteServiceProvider::HOME);
     }
+    
 
     /**
      * Destroy an authenticated session.

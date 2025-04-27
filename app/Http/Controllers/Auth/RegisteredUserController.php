@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class RegisteredUserController extends Controller
 {
@@ -42,10 +44,13 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // ✅ Assign the 'farmer' role
+        $user->assignRole('farmer');
+
         event(new Registered($user));
 
-        Auth::login($user);
-
+        // Automatically log in the user after registration
         return redirect(RouteServiceProvider::HOME);
     }
+
 }

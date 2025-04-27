@@ -22,25 +22,56 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'profile_image',
+        'language',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
     ];
+
+    public function chats()
+    {
+        return $this->hasMany(Chat::class);
+    }
+
+    public function subscriptions()
+    {
+        return $this->belongsToMany(Subscription::class, 'user_subscriptions')
+            ->withPivot('starts_at', 'ends_at', 'is_active', 'payment_id')
+            ->withTimestamps();
+    }
+
+    public function activeSubscription()
+    {
+        return $this->subscriptions()
+            ->wherePivot('is_active', true)
+            ->wherePivot('ends_at', '>', now())
+            ->orderByPivot('ends_at', 'desc')
+            ->first();
+    }
+
+    public function agricultureData()
+    {
+        return $this->hasOne(UserAgriculturalData::class);
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+    public function userSubscription()
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+    public function userAgriculturalData()
+    {
+        return $this->hasMany(UserAgriculturalData::class);
+    }
+
 }
