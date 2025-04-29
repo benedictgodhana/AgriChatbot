@@ -17,9 +17,9 @@
                  url('/fonts/futura-lt/FuturaLT-Condensed.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
-        }   
-        
-        
+        }
+
+
         :root {
             --primary-color: {{ $settings->primary_color ?? '#2e7d32' }};
             --primary-light: {{ $settings->primary_light ?? '#60ad5e' }};
@@ -37,7 +37,7 @@
         }
 
         body {
-            font-family: 'Futura LT', sans-serif;            
+            font-family: 'Futura LT', sans-serif;
             color: var(--text-primary);
             background-color: #f3f4f6;
             transition: background-color 0.3s ease, color 0.3s ease;
@@ -47,39 +47,39 @@
             background-color: var(--background-dark);
             color: var(--text-dark);
         }
-        
+
         body.dark-mode .bg-white {
             background-color: var(--card-dark);
         }
-        
+
         body.dark-mode .border {
             border-color: #333;
         }
-        
+
         body.dark-mode .text-gray-500 {
             color: #aaa;
         }
-        
+
         body.dark-mode .message-ai {
             background-color: #2a2a2a;
             border-left: none;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
-        
+
         body.dark-mode .message-user {
             background-color: rgba(96, 173, 94, 0.15);
             border-right: none;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
-        
+
         body.dark-mode .hover\:bg-gray-100:hover {
             background-color: #333;
         }
-        
+
         body.dark-mode .hover\:bg-gray-200:hover {
             background-color: #444;
         }
-        
+
         body.dark-mode textarea,
         body.dark-mode .bg-gray-50 {
             background-color: #2a2a2a;
@@ -130,7 +130,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .message-ai::before {
             content: '';
             position: absolute;
@@ -149,7 +149,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .message-user::after {
             content: '';
             position: absolute;
@@ -159,7 +159,7 @@
             width: 4px;
             background-color: var(--primary-color);
         }
-        
+
         #sidebar {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: fixed;
@@ -168,34 +168,34 @@
             background: linear-gradient(to bottom, #ffffff, #f9fbf9);
             box-shadow: 2px 0 12px rgba(0, 0, 0, 0.05);
         }
-        
+
         body.dark-mode #sidebar {
             background: linear-gradient(to bottom, #1e1e1e, #121212);
             box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
         }
-        
+
         .sidebar-collapsed #sidebar {
             transform: translateX(-100%);
             box-shadow: none;
         }
-        
+
         .content-area {
             transition: margin-left 0.3s ease;
         }
-        
+
         .sidebar-collapsed .content-area {
             margin-left: 0 !important;
         }
-        
+
         @media (max-width: 1024px) {
             #sidebar {
                 transform: translateX(-100%);
             }
-            
+
             .content-area {
                 margin-left: 0 !important;
             }
-            
+
             body:not(.sidebar-collapsed) #sidebar {
                 transform: translateX(0);
             }
@@ -226,12 +226,12 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        
+
         .dropdown {
             position: relative;
             display: inline-block;
         }
-        
+
         .dropdown-content {
             display: none;
             position: absolute;
@@ -244,7 +244,7 @@
             opacity: 0;
             transition: transform 0.2s, opacity 0.2s;
         }
-        
+
         .dropdown:hover .dropdown-content {
             display: block;
             transform: translateY(0);
@@ -268,13 +268,13 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .btn-primary:hover {
             background-color: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(46, 125, 50, 0.2);
         }
-        
+
         .btn-primary:active {
             transform: translateY(0);
             box-shadow: 0 2px 4px rgba(46, 125, 50, 0.1);
@@ -312,11 +312,11 @@
                 transform: scale(40, 40);
             }
         }
-        
+
         .menu-button {
             transition: transform 0.3s ease;
         }
-        
+
         .menu-button.open {
             transform: rotate(90deg);
         }
@@ -392,7 +392,7 @@
 
         /* Chat container styling */
 #chat-messages {
-    font-family: 'Futura LT', sans-serif;            
+    font-family: 'Futura LT', sans-serif;
     color: var(--text-color);
     line-height: 1.6;
 }
@@ -549,13 +549,13 @@ pre {
                     </button>
                     <h2 class="font-medium hidden sm:block">{{ $currentChat->title ?? 'Chat' }}</h2>
                 </div>
-                
+
                 <div class="flex items-center gap-2 sm:gap-4">
                     <!-- Theme Toggle -->
                     <button id="theme-toggle" class="p-2 rounded-xl hover:bg-gray-100 rounded-btn" onclick="toggleTheme()">
                         <i class="fas fa-{{ session('theme_mode') == 'dark-mode' ? 'sun' : 'moon' }}"></i>
                     </button>
-                    
+
                     <!-- Menu Buttons -->
                     <div class="dropdown">
                         <button class="p-2 rounded-xl hover:bg-gray-100 rounded-btn">
@@ -569,7 +569,7 @@ pre {
                             @endforeach
                         </div>
                     </div>
-                    
+
                     <div class="dropdown">
                         <button class="p-2 rounded-xl hover:bg-gray-100 rounded-btn">
                             <i class="fas fa-info-circle"></i>
@@ -582,7 +582,7 @@ pre {
                             @endforeach
                         </div>
                     </div>
-                    
+
                     <div class="dropdown">
                         <button class="p-2 rounded-xl hover:bg-gray-100 rounded-btn">
                             <i class="fas fa-cog"></i>
@@ -595,7 +595,7 @@ pre {
                             @endforeach
                         </div>
                     </div>
-                    
+
                     <!-- User Profile -->
                     <div class="dropdown">
                         <button class="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 border px-3 py-2 profile-button">
@@ -702,13 +702,13 @@ pre {
                     <input type="hidden" name="chat_id" value="{{ $currentChat->id ?? '' }}">
                     <input type="hidden" name="user_id" value="{{ auth()->user()->id }}">
                     <input type="hidden" name="sender_type" value="user">
-                    <input type="hidden" name="is_read" value="0"> 
+                    <input type="hidden" name="is_read" value="0">
                     <div class="flex items-end gap-3">
                         <div class="flex-1 border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-green-400 chat-input-container">
-                            <textarea name="content" rows="1" placeholder="{{ $settings->input_placeholder ?? 'Ask about crops, soil, pests, weather, or farming techniques...' }}" 
+                            <textarea name="content" rows="1" placeholder="{{ $settings->input_placeholder ?? 'Ask about crops, soil, pests, weather, or farming techniques...' }}"
                                 class="w-full p-4 focus:outline-none resize-none"
                                 style="min-height: 50px; max-height: 200px;" required></textarea>
-                            
+
                             <div class="px-4 py-3 border-t flex justify-between items-center bg-gray-50">
                                 <div class="flex space-x-3">
                                     <label class="p-2 rounded-lg transition cursor-pointer tool-btn">
@@ -726,7 +726,7 @@ pre {
                                 <div class="text-xs text-gray-500">Shift+Enter for new line</div>
                             </div>
                         </div>
-                        
+
                         <button type="submit" class="p-4 rounded-xl flex-shrink-0 btn-primary h-12 w-12 flex items-center justify-center">
                             <i class="fas fa-paper-plane"></i>
                         </button>
@@ -737,7 +737,7 @@ pre {
 
         <!-- Footer -->
         <footer class="text-center py-4 text-sm text-gray-500 border-t">
-            <p>{{ $settings->app_name ?? 'AgriChatbot' }} © {{ date('Y') }} | 
+            <p>{{ $settings->app_name ?? 'AgriChatbot' }} © {{ date('Y') }} |
                 @foreach($footerLinks as $link)
                 <a href="{{ $link->url }}" class="hover:text-green-600 transition">{{ $link->title }}</a> {{ !$loop->last ? '|' : '' }}
                 @endforeach
@@ -751,11 +751,11 @@ pre {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
-        
+
         // Toggle sidebar
         function toggleSidebar() {
             document.body.classList.toggle('sidebar-collapsed');
-            
+
             // Toggle overlay for mobile
             const overlay = document.getElementById('sidebar-overlay');
             if (document.body.classList.contains('sidebar-collapsed')) {
@@ -763,22 +763,22 @@ pre {
             } else {
                 overlay.classList.remove('hidden');
             }
-            
+
             // Toggle menu button animation
             const menuButton = document.querySelector('.menu-button');
             menuButton.classList.toggle('open');
         }
-        
+
         // Toggle theme
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
-            
+
             // Update icon
             const themeToggleIcon = document.querySelector('#theme-toggle i');
             if (document.body.classList.contains('dark-mode')) {
                 themeToggleIcon.classList.remove('fa-moon');
                 themeToggleIcon.classList.add('fa-sun');
-                
+
                 // Save theme preference to session
                 fetch('{{ route("theme.update") }}', {
                     method: 'POST',
@@ -791,7 +791,7 @@ pre {
             } else {
                 themeToggleIcon.classList.remove('fa-sun');
                 themeToggleIcon.classList.add('fa-moon');
-                
+
                 // Save theme preference to session
                 fetch('{{ route("theme.update") }}', {
                     method: 'POST',
@@ -803,18 +803,18 @@ pre {
                 });
             }
         }
-        
+
         // Voice input handling
         document.getElementById('voiceInputBtn').addEventListener('click', function() {
             if ('webkitSpeechRecognition' in window) {
                 const recognition = new webkitSpeechRecognition();
                 recognition.continuous = false;
                 recognition.lang = '{{ $user->language ?? "en-US" }}';
-                
+
                 recognition.onstart = function() {
                     document.getElementById('voiceInputBtn').innerHTML = '<i class="fas fa-microphone-alt text-red-500"></i>';
                 };
-                
+
                 recognition.onresult = function(event) {
                     const transcript = event.results[0][0].transcript;
                     document.querySelector('textarea[name="content"]').value += transcript;
@@ -832,24 +832,24 @@ pre {
                 alert('Your browser does not support speech recognition.');
             }
         });
-    
+
         // Form submission handling
         document.getElementById('messageForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            
+
             const formData = new FormData(this);
             const content = formData.get('content').trim();
-            
+
             if (content === '') {
                 alert('Please enter a message.');
                 return;
             }
-            
+
             // Disable the submit button to prevent multiple submissions
             const submitButton = this.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            
+
             // Submit the form
             this.submit();
         });

@@ -31,9 +31,16 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'claude' => [
+    'api_key' => env('CLAUDE_API_KEY'),
+],
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+    ],
+
     'openai' => [
     'api_key' => env('OPENAI_API_KEY'),
 ]
-        
+
 
 ];

@@ -6,43 +6,33 @@ use App\Models\Attachment;
 use App\Models\Chat;
 use App\Models\Message;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;  // Import the Str facade to generate UUID
-use OpenAI;
+use Illuminate\Support\Str;
 
 class MessageController extends Controller
 {
     public function store(Request $request)
     {
-        // Validate the incoming request
         $request->validate([
             'chat_id' => 'nullable|exists:chats,id',
             'user_id' => 'required|exists:users,id',
             'sender_type' => 'required|string',
-            'content' => 'required|string|max:10000', // Increased max size to allow for longer messages
+            'content' => 'required|string|max:10000',
             'metadata' => 'nullable|array',
             'is_read' => 'required|boolean',
         ]);
-    
-        // Check if the chat exists (if chat_id is passed, find the chat)
-        $chat = $request->chat_id ? Chat::find($request->chat_id) : null;
-    
-        // If no chat exists, create a new chat
-        if (!$chat) {
-            // Create a new chat if no chat_id is provided
-            $chat = Chat::create([
-                'user_id' => $request->input('user_id'),
-                'title' => 'New Chat', // Default title, you can customize this
-                'description' => 'A new chat has been created.',
-                'is_pinned' => 0, // Default value for pinned chat
-                'token' => Str::uuid(), // Generate a unique token
-            ]);
-        }
-    
-        // Log incoming request for debugging
-        Log::info($request->all());
-    
-        // Store the user message
+
+        $chat = $request->chat_id ? Chat::find($request->chat_id) : Chat::create([
+            'user_id' => $request->input('user_id'),
+            'title' => 'New Chat',
+            'description' => 'A new chat has been created.',
+            'is_pinned' => false,
+            'token' => Str::uuid(),
+        ]);
+
+        Log::info('User message received:', $request->all());
+
         $userMessage = Message::create([
             'chat_id' => $chat->id,
             'user_id' => $request->input('user_id'),
@@ -51,99 +41,94 @@ class MessageController extends Controller
             'metadata' => $request->input('metadata', []),
             'is_read' => $request->input('is_read', false),
         ]);
-    
-        // Generate AI response - call your AI service here
+
         $aiResponse = $this->generateAgriAIResponse($request->input('content'), $chat);
-        
-        // Store the AI response
-        $aiMessage = Message::create([
+
+        Message::create([
             'chat_id' => $chat->id,
-            'user_id' => null, // AI doesn't have a user ID
+            'user_id' => null,
             'sender_type' => 'ai',
             'content' => $aiResponse,
             'metadata' => [],
-            'is_read' => true, // AI messages are considered read immediately
+            'is_read' => true,
         ]);
-    
-        // Process any uploaded images or attachments if necessary
-        if ($request->hasFile('images') || $request->hasFile('attachments')) {
-            $this->processAttachments($request, $userMessage);
-        }
-    
-        // Redirect back to the chat page with the chat token
+
+        $this->processAttachments($request, $userMessage);
+
         return redirect()->route('chat.show', $chat->token);
     }
-    
-    /**
-     * Generate AI response for agricultural queries
-     *
-     * @param string $userQuery The user's question or message
-     * @param Chat $chat The current chat object for context
-     * @return string The AI-generated response
-     */
+
     private function generateAgriAIResponse($userQuery, $chat)
     {
         try {
-            // Get previous messages for context if needed
+            // Fetch chat history
             $chatHistory = Message::where('chat_id', $chat->id)
-                                ->orderBy('created_at', 'asc')
-                                ->take(10) // Limit to recent messages
-                                ->get()
-                                ->map(function($msg) {
-                                    return [
-                                        'role' => $msg->sender_type == 'user' ? 'user' : 'assistant',
-                                        'content' => $msg->content
-                                    ];
-                                })
-                                ->toArray();
-    
-            // Pass the OpenAI API key directly from .env
-            $apiKey = env('OPENAI_API_KEY'); // Make sure this is in your .env file
-    
-            if (empty($apiKey)) {
-                throw new \Exception('OpenAI API key is missing in the .env file.');
+                ->orderBy('created_at', 'asc')
+                ->take(10)
+                ->get()
+                ->map(function ($msg) {
+                    return [
+                        'role' => $msg->sender_type === 'user' ? 'user' : 'assistant',
+                        'content' => $msg->content,
+                    ];
+                })
+                ->toArray();
+
+            // Add user's query to the history
+            $chatHistory[] = ['role' => 'user', 'content' => $userQuery];
+
+            // Fetch API key from configuration
+            $apiKey = config('services.claude.api_key');
+            if (!$apiKey) {
+                throw new \Exception('Claude API Key is missing.');
             }
-    
-            // Connect to your preferred AI API (OpenAI example)
-            $client = OpenAI::client($apiKey);
-    
-            $completion = $client->chat()->create([
-                'model' => 'gpt-4', // Or your preferred model
-                'messages' => array_merge([
-                    ['role' => 'system', 'content' => 'You are AgriChatbot, an expert agricultural assistant. You help farmers and gardeners with detailed, accurate advice about crops, soil, pests, farming techniques, and sustainable agricultural practices. Keep your responses friendly, practical, and scientific. Include specific action items when appropriate.'],
-                ], $chatHistory, [
-                    ['role' => 'user', 'content' => $userQuery]
-                ]),
-                'temperature' => 0.7,
+
+            // Send request to Claude API
+            $response = Http::withHeaders([
+                'x-api-key' => $apiKey,
+                'anthropic-version' => '2023-06-01',
+                'Content-Type' => 'application/json',
+            ])->post('https://api.anthropic.com/v1/messages', [
+                'model' => 'claude-3-5-sonnet-20241022',
+                'max_tokens' => 1024,
+                'messages' => $chatHistory,
+                'system' => 'You are AgriChatbot, an expert agricultural assistant. Help farmers with crops, soil, pests, and sustainability. Be friendly, practical, and specific.',
             ]);
-    
-            // Extract and format the response
-            $aiResponse = $completion->choices[0]->message->content;
-    
-            // Process the response for proper HTML display
-            $aiResponse = nl2br(htmlspecialchars($aiResponse));
-    
-            // Convert markdown-style lists to HTML lists
-            $aiResponse = $this->processMarkdownLists($aiResponse);
-    
-            return $aiResponse;
-    
+
+            // Log the raw response for debugging
+            Log::info('Claude API response raw:', ['body' => $response->body()]);
+
+            // Check for successful response
+            if (!$response->successful()) {
+                Log::error('Claude API error:', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                throw new \Exception('Claude API request failed with status ' . $response->status());
+            }
+
+            // Parse and check the response content
+            $data = $response->json();
+            if (isset($data['content']) && !empty($data['content'][0]['text'])) {
+                $content = $data['content'][0]['text'];
+            } else {
+                Log::error('Claude response missing content', ['response' => $data]);
+                throw new \Exception('Claude response missing content.');
+            }
+
+            // Process and return the content
+            $content = nl2br(e($content));
+            return $this->processMarkdownLists($content);
+
         } catch (\Exception $e) {
-            Log::error('AI Response Generation Error: ' . $e->getMessage());
-            return "I apologize, but I'm having trouble generating a response at the moment. Please try again later.";
+            // Log the exception and return a user-friendly error message
+            Log::error('Claude AI Error: ' . $e->getMessage());
+            return "Sorry, I couldn’t get a response from Claude AI. Try again later.";
         }
     }
-    
-    
-    /**
-     * Convert markdown-style lists to HTML lists
-     *
-     * @param string $text The text to process
-     * @return string The processed text
-     */
+
     private function processMarkdownLists($text)
     {
-        // Convert bullet points (* Item) to HTML list
         $pattern = '/(?:^|\n)(\* .+)(?:\n|$)/m';
         if (preg_match_all($pattern, $text, $matches)) {
             foreach ($matches[0] as $match) {
@@ -161,46 +146,24 @@ class MessageController extends Controller
                 $text = str_replace($match, $html, $text);
             }
         }
-        
+
         return $text;
     }
-    
-    /**
-     * Process file attachments for messages
-     *
-     * @param Request $request The request with files
-     * @param Message $message The message to attach files to
-     * @return void
-     */
+
     private function processAttachments(Request $request, Message $message)
     {
-        // Handle image uploads
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('chat_attachments', 'public');
-                
-                Attachment::create([
-                    'message_id' => $message->id,
-                    'file_path' => $path,
-                    'file_type' => $image->getClientMimeType(),
-                    'file_name' => $image->getClientOriginalName(),
-                    'description' => 'Image uploaded by user',
-                ]);
-            }
-        }
-        
-        // Handle other file attachments
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('chat_attachments', 'public');
-                
-                Attachment::create([
-                    'message_id' => $message->id,
-                    'file_path' => $path,
-                    'file_type' => $file->getClientMimeType(),
-                    'file_name' => $file->getClientOriginalName(),
-                    'description' => 'File uploaded by user',
-                ]);
+        foreach (['images', 'attachments'] as $type) {
+            if ($request->hasFile($type)) {
+                foreach ($request->file($type) as $file) {
+                    $path = $file->store('chat_attachments', 'public');
+                    Attachment::create([
+                        'message_id' => $message->id,
+                        'file_path' => $path,
+                        'file_type' => $file->getClientMimeType(),
+                        'file_name' => $file->getClientOriginalName(),
+                        'description' => ucfirst($type) . ' uploaded by user',
+                    ]);
+                }
             }
         }
     }
