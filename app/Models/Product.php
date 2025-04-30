@@ -14,9 +14,11 @@ class Product extends Model
         'name',
         'description',
         'price',
-        'stock',
-        'category_id',
-        'image_path',
+        'image',
+        'manufacturer_id',
+        'stock_quantity',
+
+
     ];
 
 
@@ -31,5 +33,5 @@ class Product extends Model
     /**
      * Get the category that owns the product.
      */
-    
+
 }

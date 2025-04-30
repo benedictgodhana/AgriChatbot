@@ -104,7 +104,7 @@
                                                 <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 mr-3">
                                                     {{ substr($product->name, 0, 1) }}
                                                 </div>
-                                                <div class="text-sm font-medium text-gray-900">{{ $product->name , 'N/A'}}</div>
+                                                <div class="text-sm font-medium text-gray-900">{{ $product->name ?? 'N/A' }}</div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ number_format($product->price, 2) }}</td>
@@ -124,8 +124,8 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-    {{ $product->manufacturer->name ?? '' }}
-</td>
+                                            {{ $product->manufacturer->name ?? 'N/A' }}
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-2">
                                                 <button class="bg-blue-100 text-blue-600 p-2 rounded-md hover:bg-blue-200 transition-colors" onclick="viewProduct({{ $product->id }})" title="View">
@@ -182,7 +182,7 @@
                     @csrf
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                        <input type="text" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="addProductName" name="name">
+                        <input type="text" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="addProductName" name="name" required>
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -190,11 +190,20 @@
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
-                        <input type="number" step="0.01" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="addProductPrice" name="price">
+                        <input type="number" step="0.01" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="addProductPrice" name="price" required>
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-                        <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="addProductStock" name="stock_quantity">
+                        <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="addProductStock" name="stock_quantity" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Manufacturer</label>
+                        <select name="manufacturer_id" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="addProductManufacturer" required>
+                            <option value="">Select Manufacturer</option>
+                            @foreach ($manufacturers as $manufacturer)
+                                <option value="{{ $manufacturer->id }}">{{ $manufacturer->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="flex justify-end space-x-3">
@@ -229,7 +238,7 @@
                     <input type="hidden" id="editProductId" name="id">
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                        <input type="text" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="editProductName" name="name">
+                        <input type="text" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="editProductName" name="name" required>
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -237,11 +246,20 @@
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
-                        <input type="number" step="0.01" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="editProductPrice" name="price">
+                        <input type="number" step="0.01" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="editProductPrice" name="price" required>
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-                        <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="editProductStock" name="stock_quantity">
+                        <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="editProductStock" name="stock_quantity" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Manufacturer</label>
+                        <select name="manufacturer_id" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="editProductManufacturer" required>
+                            <option value="">Select Manufacturer</option>
+                            @foreach ($manufacturers as $manufacturer)
+                                <option value="{{ $manufacturer->id }}">{{ $manufacturer->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="flex justify-end space-x-3">
@@ -312,25 +330,35 @@
             </div>
         </div>
     </div>
+</x-app-layout>
 
     <script>
+        // Modal functionality
         function toggleModal(modalId) {
             const modal = document.getElementById(modalId);
+            if (!modal) return;
+
             if (modal.classList.contains('hidden')) {
+                // Open modal
                 modal.classList.remove('hidden');
                 document.body.style.overflow = 'hidden'; // Prevent scrolling while modal is open
 
                 // Add animation
                 const modalContent = modal.querySelector('div');
-                modalContent.classList.add('scale-95', 'opacity-0');
-                setTimeout(() => {
-                    modalContent.classList.remove('scale-95', 'opacity-0');
-                    modalContent.classList.add('scale-100', 'opacity-100');
-                }, 10);
+                if (modalContent) {
+                    modalContent.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        modalContent.classList.remove('scale-95', 'opacity-0');
+                        modalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                }
             } else {
+                // Close modal
                 const modalContent = modal.querySelector('div');
-                modalContent.classList.remove('scale-100', 'opacity-100');
-                modalContent.classList.add('scale-95', 'opacity-0');
+                if (modalContent) {
+                    modalContent.classList.remove('scale-100', 'opacity-100');
+                    modalContent.classList.add('scale-95', 'opacity-0');
+                }
 
                 setTimeout(() => {
                     modal.classList.add('hidden');
@@ -339,87 +367,148 @@
             }
         }
 
+        // View Product Details
         function viewProduct(productId) {
-            // In a real implementation, you would fetch product details via AJAX
-            // For demonstration purposes, we'll use placeholder data
-            fetch(`/api/products/${productId}`)
+            // Show loading indicator
+            document.getElementById('viewProductBody').innerHTML = `
+                <div class="flex justify-center py-6">
+                    <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+            `;
+
+            // Open the modal first to show loading
+            toggleModal('viewModal');
+
+            // Fetch product
+            fetch(`/products/${productId}`)
                 .then(response => response.json())
-                .then(product => {
+                .then(data => {
+                    // Populate modal with product details
+                    const product = data.product;
                     document.getElementById('viewProductBody').innerHTML = `
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-center mb-4">
-                                <div class="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 text-2xl font-semibold">
-                                    ${product.name.charAt(0)}
-                                </div>
-                            </div>
-                            <div class="border-b pb-3">
-                                <p class="text-sm text-gray-500">Product Name</p>
-                                <p class="text-gray-800 font-medium">${product.name}</p>
-                            </div>
-                            <div class="border-b pb-3">
-                                <p class="text-sm text-gray-500">Description</p>
-                                <p class="text-gray-800">${product.description || 'No description available'}</p>
-                            </div>
-                            <div class="border-b pb-3">
-                                <p class="text-sm text-gray-500">Price</p>
-                                <p class="text-gray-800 font-medium">$${Number(product.price).toFixed(2)}</p>
-                            </div>
-                            <div class="border-b pb-3">
-                                <p class="text-sm text-gray-500">Stock Quantity</p>
-                                <p class="text-gray-800 font-medium">${product.stock_quantity}</p>
-                            </div>
-                            <div class="border-b pb-3">
-                                <p class="text-sm text-gray-500">Manufacturer</p>
-                                <p class="text-gray-800 font-medium">${product.manufacturer.name}</p>
-                            </div>
-                            <div class="border-b pb-3">
-                                <p class="text-sm text-gray-500">Created At</p>
-                                <p class="text-gray-800 font-medium">${new Date(product.created_at).toLocaleDateString()}</p>
-                            </div>
-                            <div class="border-b pb-3">
-                                <p class="text-sm text-gray-500">Updated At</p>
-                                <p class="text-gray-800 font-medium">${new Date(product.updated_at).toLocaleDateString()}</p>
-                            </div>
+                        <div class="mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">${product.name}</h3>
+                            <p class="text-sm text-gray-600 mb-2">${product.description}</p>
+                            <p class="text-sm text-gray-800 font-bold">$${parseFloat(product.price).toFixed(2)}</p>
+                            <p class="text-sm text-gray-500">Stock: ${product.stock_quantity > 0 ? product.stock_quantity : 'Out of Stock'}</p>
+                            <p class="text-sm text-gray-500">Manufacturer: ${product.manufacturer.name}</p>
                         </div>
                     `;
-                    toggleModal('viewModal');
                 })
                 .catch(error => {
-                    console.error('Error fetching product details:', error);
+                    console.error('Error fetching product:', error);
+                    document.getElementById('viewProductBody').innerHTML = `
+                        <div class="text-red-500">Error loading product details. Please try again later.</div>
+                    `;
                 });
         }
+        // Edit Product
         function editProduct(productId) {
-            // In a real implementation, you would fetch product details via AJAX
-            // For demonstration purposes, we'll use placeholder data
-            fetch(`/api/products/${productId}`)
+            // Fetch product data
+            fetch(`/products/${productId}/edit`)
                 .then(response => response.json())
-                .then(product => {
+                .then(data => {
+                    const product = data.product;
                     document.getElementById('editProductId').value = product.id;
                     document.getElementById('editProductName').value = product.name;
-                    document.getElementById('editProductDescription').value = product.description || '';
+                    document.getElementById('editProductDescription').value = product.description;
                     document.getElementById('editProductPrice').value = product.price;
                     document.getElementById('editProductStock').value = product.stock_quantity;
                     document.getElementById('editProductManufacturer').value = product.manufacturer_id;
                     toggleModal('editModal');
                 })
                 .catch(error => {
-                    console.error('Error fetching product details:', error);
+                    console.error('Error fetching product for edit:', error);
                 });
         }
+        // Confirm Delete
         function confirmDelete(productId) {
-            document.getElementById('deleteProductForm').action = `/products/${productId}`;
+            const deleteForm = document.getElementById('deleteProductForm');
+            deleteForm.action = `/products/${productId}`;
             toggleModal('deleteModal');
         }
-        document.addEventListener('DOMContentLoaded', function() {
-            // Close modals when clicking outside of them
-            const modals = document.querySelectorAll('.fixed.inset-0');
-            modals.forEach(modal => {
-                modal.addEventListener('click', function(event) {
-                    if (event.target === modal) {
-                        toggleModal(modal.id);
-                    }
-                });
+        // Add Product Form Submission
+        document.getElementById('addProductForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal and refresh page
+                    toggleModal('addModal');
+                    window.location.reload();
+                } else {
+                    // Handle validation errors
+                    console.error('Error adding product:', data.errors);
+                }
+            })
+            .catch(error => {
+                console.error('Error adding product:', error);
+            });
+        });
+        // Edit Product Form Submission
+        document.getElementById('editProductForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal and refresh page
+                    toggleModal('editModal');
+                    window.location.reload();
+                } else {
+                    // Handle validation errors
+                    console.error('Error editing product:', data.errors);
+                }
+            })
+            .catch(error => {
+                console.error('Error editing product:', error);
+            });
+        });
+        // Delete Product Form Submission
+        document.getElementById('deleteProductForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal and refresh page
+                    toggleModal('deleteModal');
+                    window.location.reload();
+                } else {
+                    // Handle error
+                    console.error('Error deleting product:', data.errors);
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting product:', error);
             });
         });
     </script>
-</x-app-layout>
+</body>
+</html>
+

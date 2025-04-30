@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Manufacturer;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class ProductController extends Controller
 {
@@ -11,8 +13,9 @@ class ProductController extends Controller
     {
         // Eager-load the 'manufacturer' relationship to prevent N+1 queries
         $products = Product::with('manufacturer')->paginate(10);
+        $manufacturers=Manufacturer::all();
 
-        return view('products.index', compact('products'));
+        return view('products.index', compact('products', 'manufacturers')); // Ensure this view file exists
     }
 
     public function create()
