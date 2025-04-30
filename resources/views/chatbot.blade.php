@@ -706,6 +706,7 @@
         </div>
     </div>
 </div>
+<br>
 @include('components.product-display', ['products' => $products])
 </div>
 <script>

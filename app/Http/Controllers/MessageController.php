@@ -67,73 +67,73 @@ class MessageController extends Controller
     }
 
     private function generateAgriAIResponse($userQuery, $chat)
-    {
-        try {
-            // Fetch chat history
-            $chatHistory = Message::where('chat_id', $chat->id)
-                ->orderBy('created_at', 'asc')
-                ->take(10)
-                ->get()
-                ->map(function ($msg) {
-                    return [
-                        'role' => $msg->sender_type === 'user' ? 'user' : 'assistant',
-                        'content' => $msg->content,
-                    ];
-                })
-                ->toArray();
+{
+    try {
+        // Fetch chat history
+        $chatHistory = Message::where('chat_id', $chat->id)
+            ->orderBy('created_at', 'asc')
+            ->take(10)
+            ->get()
+            ->map(function ($msg) {
+                return [
+                    'role' => $msg->sender_type === 'user' ? 'user' : 'assistant',
+                    'content' => $msg->content,
+                ];
+            })
+            ->toArray();
 
-            // Add user's query to the history
-            $chatHistory[] = ['role' => 'user', 'content' => $userQuery];
+        // Add user's query to the history
+        $chatHistory[] = ['role' => 'user', 'content' => $userQuery];
 
-            // Fetch API key from configuration
-            $apiKey = config('services.claude.api_key');
-            if (!$apiKey) {
-                throw new \Exception('Claude API Key is missing.');
-            }
-
-            // Send request to Claude API
-            $response = Http::withHeaders([
-                'x-api-key' => $apiKey,
-                'anthropic-version' => '2023-06-01',
-                'Content-Type' => 'application/json',
-            ])->post('https://api.anthropic.com/v1/messages', [
-                'model' => 'claude-3-5-sonnet-20241022',
-                'max_tokens' => 1024,
-                'messages' => $chatHistory,
-                'system' => 'You are AgriChatbot, an expert agricultural assistant. Help farmers with crops, soil, pests, and sustainability. Be friendly, practical, and specific.',
-            ]);
-
-            // Log the raw response for debugging
-            Log::info('Claude API response raw:', ['body' => $response->body()]);
-
-            // Check for successful response
-            if (!$response->successful()) {
-                Log::error('Claude API error:', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-                throw new \Exception('Claude API request failed with status ' . $response->status());
-            }
-
-            // Parse and check the response content
-            $data = $response->json();
-            if (isset($data['content']) && !empty($data['content'][0]['text'])) {
-                $content = $data['content'][0]['text'];
-            } else {
-                Log::error('Claude response missing content', ['response' => $data]);
-                throw new \Exception('Claude response missing content.');
-            }
-
-            // Process and return the content
-            $content = nl2br(e($content));
-            return $this->processMarkdownLists($content);
-
-        } catch (\Exception $e) {
-            // Log the exception and return a user-friendly error message
-            Log::error('Claude AI Error: ' . $e->getMessage());
-            return "Sorry, I couldn’t get a response from Claude AI. Try again later.";
+        // Fetch API key from configuration
+        $apiKey = config('services.claude.api_key');
+        if (!$apiKey) {
+            throw new \Exception('Claude API Key is missing.');
         }
+
+        // Send request to Claude API
+        $response = Http::withHeaders([
+            'x-api-key' => $apiKey,
+            'anthropic-version' => '2023-06-01',
+            'Content-Type' => 'application/json',
+        ])->post('https://api.anthropic.com/v1/messages', [
+            'model' => 'claude-3-5-sonnet-20241022',
+            'max_tokens' => 1024,
+            'messages' => $chatHistory,
+            'system' => 'You are AgriChatbot, an expert agricultural assistant. Help farmers with crops, soil, pests, and sustainability. Be friendly, practical, and specific.',
+        ]);
+
+        // Log the raw response for debugging
+        Log::info('Claude API response raw:', ['body' => $response->body()]);
+
+        // Check for successful response
+        if (!$response->successful()) {
+            Log::error('Claude API error:', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception('Claude API request failed with status ' . $response->status());
+        }
+
+        // Parse and check the response content
+        $data = $response->json();
+        if (isset($data['content']) && !empty($data['content'][0]['text'])) {
+            $content = $data['content'][0]['text'];
+        } else {
+            Log::error('Claude response missing content', ['response' => $data]);
+            throw new \Exception('Claude response missing content.');
+        }
+
+        // Return raw markdown content (escaped if necessary in Blade)
+        return $content;
+
+    } catch (\Exception $e) {
+        // Log the exception and return a user-friendly error message
+        Log::error('Claude AI Error: ' . $e->getMessage());
+        return "Sorry, I couldn’t get a response from Claude AI. Try again later.";
     }
+}
+
 
     private function getProductRecommendations($query)
     {
