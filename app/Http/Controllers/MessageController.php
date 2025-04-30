@@ -1,10 +1,10 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Attachment;
 use App\Models\Chat;
 use App\Models\Message;
+use App\Models\Product; // Assuming you have a Product model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -42,8 +42,16 @@ class MessageController extends Controller
             'is_read' => $request->input('is_read', false),
         ]);
 
+        // Call to AI for the user query
         $aiResponse = $this->generateAgriAIResponse($request->input('content'), $chat);
 
+        // If AI generates a recommendation for products, append it
+        $productRecommendations = $this->getProductRecommendations($request->input('content'));
+        if ($productRecommendations) {
+            $aiResponse .= "\n\nHere are some product recommendations that might help you:\n" . implode("\n", $productRecommendations);
+        }
+
+        // Save the AI's response with product recommendations (if any)
         Message::create([
             'chat_id' => $chat->id,
             'user_id' => null,
@@ -125,6 +133,35 @@ class MessageController extends Controller
             Log::error('Claude AI Error: ' . $e->getMessage());
             return "Sorry, I couldn’t get a response from Claude AI. Try again later.";
         }
+    }
+
+    private function getProductRecommendations($query)
+    {
+        // Check for keywords related to products like fertilizers, seeds, tools, etc.
+        $productRecommendations = [];
+
+        if (str_contains(strtolower($query), 'fertilizer')) {
+            $products = Product::where('category', 'fertilizers')->take(3)->get();
+            foreach ($products as $product) {
+                $productRecommendations[] = $product->name . ' - ' . $product->description . ' (Price: ' . $product->price . ')';
+            }
+        }
+
+        if (str_contains(strtolower($query), 'seeds')) {
+            $products = Product::where('category', 'seeds')->take(3)->get();
+            foreach ($products as $product) {
+                $productRecommendations[] = $product->name . ' - ' . $product->description . ' (Price: ' . $product->price . ')';
+            }
+        }
+
+        if (str_contains(strtolower($query), 'tools')) {
+            $products = Product::where('category', 'tools')->take(3)->get();
+            foreach ($products as $product) {
+                $productRecommendations[] = $product->name . ' - ' . $product->description . ' (Price: ' . $product->price . ')';
+            }
+        }
+
+        return $productRecommendations;
     }
 
     private function processMarkdownLists($text)

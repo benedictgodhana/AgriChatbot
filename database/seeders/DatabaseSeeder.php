@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             WelcomeMessagesSeeder::class,
             SubscriptionsSeeder::class,
             KnowledgeBaseSeeder::class,
+            
         ]);
     }
 }
@@ -37,7 +38,7 @@ class SettingsSeeder extends Seeder
             ['key' => 'app_name', 'value' => 'FarmerAI', 'group' => 'general'],
             ['key' => 'app_description', 'value' => 'Your agricultural assistant', 'group' => 'general'],
             ['key' => 'ai_name', 'value' => 'FarmerAI', 'group' => 'general'],
-            
+
             // Theme settings
             ['key' => 'primary_color', 'value' => '#2e7d32', 'group' => 'theme'],
             ['key' => 'primary_light', 'value' => '#60ad5e', 'group' => 'theme'],
@@ -49,15 +50,15 @@ class SettingsSeeder extends Seeder
             ['key' => 'background_dark', 'value' => '#121212', 'group' => 'theme'],
             ['key' => 'text_dark', 'value' => '#e0e0e0', 'group' => 'theme'],
             ['key' => 'card_dark', 'value' => '#1e1e1e', 'group' => 'theme'],
-            
+
             // Input settings
             ['key' => 'input_placeholder', 'value' => 'Ask about crops, soil, pests, weather, or farming techniques...', 'group' => 'chat'],
-            
+
             // Message limits
             ['key' => 'free_message_limit', 'value' => '10', 'group' => 'limits'],
             ['key' => 'basic_message_limit', 'value' => '50', 'group' => 'limits'],
             ['key' => 'premium_message_limit', 'value' => '0', 'group' => 'limits'], // 0 = unlimited
-            
+
             // API settings
             ['key' => 'ai_api_key', 'value' => 'your-api-key-here', 'group' => 'api', 'is_public' => false],
             ['key' => 'ai_model', 'value' => 'gpt-4', 'group' => 'api', 'is_public' => false],

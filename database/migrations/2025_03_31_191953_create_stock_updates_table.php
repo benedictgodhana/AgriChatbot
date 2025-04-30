@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('stock_updates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->foreignId('manufacturer_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('manufacturer_id')->constrained('manufacturers')->onDelete('cascade');
             $table->integer('previous_stock');
             $table->integer('new_stock');
             $table->timestamps();
