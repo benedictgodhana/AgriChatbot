@@ -18,4 +18,18 @@ class Product extends Model
         'category_id',
         'image_path',
     ];
+
+
+    /**
+     * Get the manufacturer that owns the product.
+     */
+
+    public function manufacturer()
+    {
+        return $this->belongsTo(Manufacturer::class);
+    }
+    /**
+     * Get the category that owns the product.
+     */
+    
 }

@@ -9,10 +9,10 @@ class ProductController extends Controller
 {
     public function index()
     {
+        // Eager-load the 'manufacturer' relationship to prevent N+1 queries
+        $products = Product::with('manufacturer')->paginate(10);
 
-        // Fetch products from the database
-        $products = Product::paginate(10); // Uncomment this line if you have a Product model
-        return view('products.index',compact('products')); // Ensure this view file exists
+        return view('products.index', compact('products'));
     }
 
     public function create()

@@ -23,7 +23,7 @@
                     }, 4000);
                 </script>
             @endif
-            
+
             <!-- Main Card -->
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                 <div class="p-6 sm:p-8">
@@ -57,7 +57,7 @@
                                 </div>
                             </div>
                             <div class="mb-2 md:mb-0 md:w-48">
-                               
+
                             </div>
                             <div class="mb-2 md:mb-0 md:w-48">
                                 <select name="stock" class="w-full py-2 px-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
@@ -104,7 +104,7 @@
                                                 <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 mr-3">
                                                     {{ substr($product->name, 0, 1) }}
                                                 </div>
-                                                <div class="text-sm font-medium text-gray-900">{{ $product->name }}</div>
+                                                <div class="text-sm font-medium text-gray-900">{{ $product->name , 'N/A'}}</div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ number_format($product->price, 2) }}</td>
@@ -123,7 +123,9 @@
                                                 </span>
                                             @endif
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $product->manufacturer->name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+    {{ $product->manufacturer->name ?? '' }}
+</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-2">
                                                 <button class="bg-blue-100 text-blue-600 p-2 rounded-md hover:bg-blue-200 transition-colors" onclick="viewProduct({{ $product->id }})" title="View">
@@ -149,7 +151,7 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <!-- Pagination -->
                     <div class="mt-4">
                         {{ $products->links() }}
@@ -194,7 +196,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
                         <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="addProductStock" name="stock_quantity">
                     </div>
-                   
+
                     <div class="flex justify-end space-x-3">
                         <button type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100" onclick="toggleModal('addModal')">Cancel</button>
                         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 shadow-sm">Add Product</button>
@@ -241,7 +243,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
                         <input type="number" class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" id="editProductStock" name="stock_quantity">
                     </div>
-                   
+
                     <div class="flex justify-end space-x-3">
                         <button type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100" onclick="toggleModal('editModal')">Cancel</button>
                         <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 shadow-sm">Save Changes</button>
@@ -317,7 +319,7 @@
             if (modal.classList.contains('hidden')) {
                 modal.classList.remove('hidden');
                 document.body.style.overflow = 'hidden'; // Prevent scrolling while modal is open
-                
+
                 // Add animation
                 const modalContent = modal.querySelector('div');
                 modalContent.classList.add('scale-95', 'opacity-0');
@@ -329,7 +331,7 @@
                 const modalContent = modal.querySelector('div');
                 modalContent.classList.remove('scale-100', 'opacity-100');
                 modalContent.classList.add('scale-95', 'opacity-0');
-                
+
                 setTimeout(() => {
                     modal.classList.add('hidden');
                     document.body.style.overflow = ''; // Re-enable scrolling
